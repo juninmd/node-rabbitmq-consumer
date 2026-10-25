@@ -1,7 +1,6 @@
 import { Queues } from '../enums';
-import Rabbit from '../rabbit'
+import Rabbit from '../rabbit';
 export default class Consumer {
-
   private queue: Queues;
   constructor(queue: Queues) {
     this.queue = queue;
@@ -16,7 +15,7 @@ export default class Consumer {
         const result = msg.content.toString();
         ch.ack(msg);
         console.log(result);
-      })
+      });
     } catch (error) {
       console.error(error);
     }
