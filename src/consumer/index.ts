@@ -11,7 +11,9 @@ export default class Consumer {
       const ch = await Rabbit.getInstance().getChannel();
       await ch.assertQueue(this.queue, { durable: true });
 
-      await ch.consume(this.queue, function (msg) {
+      await ch.consume(this.queue, (msg) => {
+        // null quando o broker cancela o consumidor
+        if (!msg) return;
         const result = msg.content.toString();
         ch.ack(msg);
         console.log(result);
