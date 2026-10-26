@@ -4,7 +4,7 @@ import configs from '../configs';
 export default class Rabbit {
   private static instance: Rabbit;
 
-  private channel: amplib.Channel;
+  private channelPromise?: Promise<amplib.Channel>;
 
   // Construtor privado: a instância única é controlada por getInstance().
   private constructor() {
@@ -18,11 +18,18 @@ export default class Rabbit {
     return Rabbit.instance;
   }
 
-  public async getChannel() {
-    if (!this.channel) {
-      const connection = await amplib.connect(configs.rabbitmq);
-      this.channel = await connection.createChannel();
+  // Guarda a promise (não o canal) para que chamadas concorrentes compartilhem
+  // uma única conexão em vez de abrir uma por chamada.
+  public getChannel(): Promise<amplib.Channel> {
+    if (!this.channelPromise) {
+      this.channelPromise = amplib
+        .connect(configs.rabbitmq)
+        .then((connection) => connection.createChannel())
+        .catch((error) => {
+          this.channelPromise = undefined;
+          throw error;
+        });
     }
-    return this.channel;
+    return this.channelPromise;
   }
 }
